@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .handle-with-label::after {
+    content: attr(data-label);
+    position: absolute;
+    font-size: 0.625rem; /* Tailwind for text-xs */
+    white-space: nowrap;
+    bottom: 100%;
+    margin-bottom: 0.5rem; /* Tailwind equivalent of mb-2 */
+  }
+  .handle-with-label.bottom::after {
+    bottom: auto;
+    top: 100%;
+    margin-bottom: 0;
+    margin-top: 0.5rem; /* Tailwind equivalent of mt-2 */
+  }
+}
