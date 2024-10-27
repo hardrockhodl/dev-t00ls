@@ -10,8 +10,6 @@ import {
   Minimize2,
 } from 'lucide-react';
 import ReactFlow, {
-  Node,
-  Edge,
   Controls,
   Background,
   useNodesState,
