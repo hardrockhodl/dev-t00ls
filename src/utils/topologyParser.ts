@@ -224,7 +224,7 @@ export async function parseTopologyCSV(
           reject(error);
         }
       },
-      error: (error) => {
+      error: (error: { message: any; }) => {
         reject(new Error(`Failed to parse CSV: ${error.message}`));
       },
     });
