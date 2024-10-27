@@ -19,7 +19,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { toast } from 'react-hot-toast';
-import { parseTopologyCSV } from '../utils/topologyParser';
+import { parseTopologyCSV } from '../utils/topologyParser.ts';
 import { NetworkNode } from '../components/topology/NetworkNode';
 
 const nodeTypes = {

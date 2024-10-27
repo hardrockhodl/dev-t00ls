@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 import { Node, Edge, Position } from 'reactflow';
 import { z } from 'zod';
+import ELK, { ElkNode, ElkEdge } from 'elkjs';
 
 const TopologyRowSchema = z.object({
   source: z.string(),
@@ -34,10 +35,7 @@ function generateNodeId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
 
-function calculateNodePosition(
-  index: number,
-  total: number
-): { x: number; y: number } {
+function calculateNodePosition(index: number, total: number): { x: number; y: number } {
   const radius = Math.min(total * 50, 300);
   const angle = (index / total) * 2 * Math.PI;
   return {
@@ -83,15 +81,51 @@ function formatPortInfo(row: TopologyRow, isSource: boolean): string {
   return parts.join(' - ');
 }
 
-export async function parseTopologyCSV(
-  csvContent: string,
-  showPorts: boolean = true
-): Promise<ParsedTopology> {
+async function layoutNodesAndEdges(nodes: Node[], edges: Edge[]): Promise<{ nodes: Node[]; edges: Edge[] }> {
+  const elk = new ELK();
+  const elkNodes: ElkNode[] = nodes.map((node) => ({
+    id: node.id,
+    width: 100,
+    height: 100,
+  }));
+
+  const elkEdges: ElkEdge[] = edges.map((edge) => ({
+    id: edge.id,
+    sources: [edge.source],
+    targets: [edge.target],
+  }));
+
+  const elkGraph = {
+    id: 'root',
+    children: elkNodes,
+    edges: elkEdges,
+  };
+
+  const layout = await elk.layout(elkGraph);
+
+  const positionedNodes = nodes.map((node) => {
+    const elkNode = layout.children?.find((n) => n.id === node.id);
+    if (!elkNode) {
+      throw new Error(`Node with id ${node.id} not found in layout`);
+    }
+    return {
+      ...node,
+      position: {
+        x: elkNode.x ?? 0,
+        y: elkNode.y ?? 0,
+      },
+    };
+  });
+
+  return { nodes: positionedNodes, edges };
+}
+
+export async function parseTopologyCSV(csvContent: string, showPorts: boolean = true): Promise<ParsedTopology> {
   return new Promise((resolve, reject) => {
     Papa.parse(csvContent, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
+      complete: async (results: Papa.ParseResult<Record<string, string>>) => {
         try {
           const rows = results.data as Record<string, string>[];
 
@@ -105,9 +139,7 @@ export async function parseTopologyCSV(
           );
 
           if (missingColumns.length) {
-            throw new Error(
-              `Missing required columns: ${missingColumns.join(', ')}`
-            );
+            throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
           }
 
           const validRows = rows.map((row) => {
@@ -219,12 +251,12 @@ export async function parseTopologyCSV(
             };
           });
 
-          resolve({ nodes, edges });
+          resolve(await layoutNodesAndEdges(nodes, edges));
         } catch (error) {
           reject(error);
         }
       },
-      error: (error: { message: any; }) => {
+      error: (error: any) => {
         reject(new Error(`Failed to parse CSV: ${error.message}`));
       },
     });
