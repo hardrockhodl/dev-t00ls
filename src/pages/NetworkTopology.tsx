@@ -128,7 +128,7 @@ export function NetworkTopology() {
               Network Topology Visualizer
             </h1>
           </div>
-          {/* 666 */}
+          {/* 6666 */}
           <div className="bg-white rounded-lg drop-shadow-md p-6 mb-6">
             <div className="flex items-center justify-between">
               <div>
