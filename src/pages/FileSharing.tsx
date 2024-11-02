@@ -34,8 +34,8 @@ export function FileSharing() {
       setShareLink(url);
       setUploadStatus({ progress: 100, message: 'Upload complete!' });
       toast.success('File uploaded successfully! Link expires in 1 hour.');
-    } catch (error) {
-      console.error('Upload error:', error);
+    } catch {
+      console.error('Upload error');
       toast.error('Failed to upload file. Please try again.');
       setUploadStatus({ progress: 0, message: '' });
     }
@@ -47,7 +47,7 @@ export function FileSharing() {
       setCopied(true);
       toast.success('Link copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy link');
     }
   };

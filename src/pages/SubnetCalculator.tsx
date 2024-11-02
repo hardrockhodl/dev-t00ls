@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Calculator } from 'lucide-react';
 import { SubnetForm } from '../components/subnet/SubnetForm';
 import { SubnetTable } from '../components/subnet/SubnetTable';
-import { SubnetNode, parseNetworkAddress, calculateSubnets } from '../utils/subnetCalculator';
+import { SubnetNode, parseNetworkAddress } from '../utils/subnetCalculator';
 
 export function SubnetCalculator() {
   const [network, setNetwork] = useState('192.168.0.0');
@@ -27,10 +27,12 @@ export function SubnetCalculator() {
     }
   };
 
+  type ColumnKey = keyof typeof visibleColumns;
+
   const handleColumnToggle = (columnName: string) => {
     setVisibleColumns(prev => ({
       ...prev,
-      [columnName]: !prev[columnName]
+      [columnName as ColumnKey]: !prev[columnName as ColumnKey]
     }));
   };
 

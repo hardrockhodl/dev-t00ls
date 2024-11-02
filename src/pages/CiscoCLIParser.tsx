@@ -25,7 +25,8 @@ export function CiscoCLIParser() {
       const result = await parseCiscoCLI(cliInput);
       setOutput(result);
       toast.success('CLI output parsed successfully');
-    } catch (error) {
+    } catch {
+      toast.error('Failed to parse CLI output');
       setOutput(null);
     } finally {
       setLoading(false);

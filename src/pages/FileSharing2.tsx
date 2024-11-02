@@ -94,7 +94,7 @@ export function FileSharing2() {
       setCopied(true);
       toast.success('Code copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
+    } catch {
       toast.error('Failed to copy code');
     }
   };
