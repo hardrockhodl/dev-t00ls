@@ -65,6 +65,17 @@ export default function NetworkTopology() {
     }
   }, [nodes, edges, setNodes, setEdges]);
 
+  const updateTopology = useCallback(
+    async (content: string, showPortInfo: boolean) => {
+      const { nodes: parsedNodes, edges: parsedEdges } = await parseTopologyCSV(content, showPortInfo);
+      const { nodes: newNodes, edges: newEdges } = await layoutNodesAndEdges(parsedNodes, parsedEdges, layoutOption);
+      setNodes(newNodes);
+      setEdges(newEdges);
+      toast.success('Network topology updated');
+    },
+    [layoutOption, setNodes, setEdges]
+  );
+
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file?.name.endsWith('.csv')) {
@@ -80,18 +91,7 @@ export default function NetworkTopology() {
     } else {
       toast.error('Please upload a CSV file');
     }
-  }, [showPorts]);
-
-  const updateTopology = useCallback(
-    async (content: string, showPortInfo: boolean) => {
-      const { nodes: parsedNodes, edges: parsedEdges } = await parseTopologyCSV(content, showPortInfo);
-      const { nodes: newNodes, edges: newEdges } = await layoutNodesAndEdges(parsedNodes, parsedEdges, layoutOption);
-      setNodes(newNodes);
-      setEdges(newEdges);
-      toast.success('Network topology updated');
-    },
-    [layoutOption]
-  );
+  }, [showPorts, updateTopology]);
 
   const togglePortVisibility = async () => {
     setShowPorts(!showPorts);
