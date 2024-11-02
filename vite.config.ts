@@ -37,7 +37,7 @@ export default defineConfig({
                 const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
                 
                 let startPos = 0;
-                let endPos = buffer.length;
+                const endPos = buffer.length;
                 let fileContent = null;
                 let id = '';
                 let metadata = null;
