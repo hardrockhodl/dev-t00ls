@@ -8,7 +8,6 @@ import {
   Clipboard,
   GitGraph,
   ChevronDown,
-  HomeIcon,
   Wrench
 } from 'lucide-react';
 

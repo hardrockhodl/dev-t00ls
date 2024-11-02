@@ -1,7 +1,7 @@
 import Papa from 'papaparse';
 import { Node, Edge, Position } from 'reactflow';
 import { z } from 'zod';
-import ELK, { ElkNode, ElkEdge } from 'elkjs';
+import ELK from 'elkjs';
 
 const TopologyRowSchema = z.object({
   source: z.string(),
@@ -56,7 +56,7 @@ function getNodeType(deviceType: string): string {
   return 'default';
 }
 
-function calculatePortOffset(portIndex: number, totalPorts: number): number {
+function calculateOffset(portIndex: number, totalPorts: number): number {
   if (totalPorts === 1) return 50;
   const spacing = 100 / (totalPorts + 1);
   return spacing * (portIndex + 1);
@@ -83,31 +83,26 @@ function formatPortInfo(row: TopologyRow, isSource: boolean): string {
 
 async function layoutNodesAndEdges(nodes: Node[], edges: Edge[]): Promise<{ nodes: Node[]; edges: Edge[] }> {
   const elk = new ELK();
-  const elkNodes: ElkNode[] = nodes.map((node) => ({
+  const elkNodes = nodes.map((node) => ({
     id: node.id,
     width: 100,
     height: 100,
   }));
-
-  const elkEdges: ElkEdge[] = edges.map((edge) => ({
+  const elkEdges = edges.map((edge) => ({
     id: edge.id,
     sources: [edge.source],
     targets: [edge.target],
   }));
-
-  const elkGraph = {
+  
+  const layout = await elk.layout({
     id: 'root',
     children: elkNodes,
     edges: elkEdges,
-  };
-
-  const layout = await elk.layout(elkGraph);
+  });
 
   const positionedNodes = nodes.map((node) => {
     const elkNode = layout.children?.find((n) => n.id === node.id);
-    if (!elkNode) {
-      throw new Error(`Node with id ${node.id} not found in layout`);
-    }
+    if (!elkNode) throw new Error(`Node with id ${node.id} not found in layout`);
     return {
       ...node,
       position: {
@@ -116,7 +111,8 @@ async function layoutNodesAndEdges(nodes: Node[], edges: Edge[]): Promise<{ node
       },
     };
   });
-
+  
+  // Return within function, no top-level return
   return { nodes: positionedNodes, edges };
 }
 
@@ -190,7 +186,7 @@ export async function parseTopologyCSV(csvContent: string, showPorts: boolean = 
                   id: `${deviceId}-${portId}`,
                   name: portInfo.name,
                   position: Position.Bottom,
-                  offset: calculatePortOffset(
+                  offset: calculateOffset(
                     portIndex,
                     Object.keys(ports).length
                   ),

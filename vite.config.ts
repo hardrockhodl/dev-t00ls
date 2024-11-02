@@ -1,3 +1,4 @@
+// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import fs from 'fs';
@@ -14,7 +15,6 @@ export default defineConfig({
       configureServer(server) {
         const shareDir = path.join(__dirname, 'public', '.share');
         
-        // Ensure share directory exists
         if (!fs.existsSync(shareDir)) {
           fs.mkdirSync(shareDir, { recursive: true });
         }
@@ -24,9 +24,8 @@ export default defineConfig({
             return next();
           }
 
-          // Handle file upload
           if (req.url === '/.share/upload' && req.method === 'POST') {
-            const chunks: Buffer[] = [];
+            const chunks: Uint8Array[] | Buffer[] = [];
             req.on('data', chunk => chunks.push(Buffer.from(chunk)));
             req.on('end', () => {
               try {
@@ -34,17 +33,15 @@ export default defineConfig({
                 const boundary = req.headers['content-type']?.split('boundary=')[1];
                 if (!boundary) throw new Error('No boundary found');
 
-                // Find the boundary markers in the buffer
                 const boundaryBuffer = Buffer.from(`--${boundary}`);
                 const endBoundaryBuffer = Buffer.from(`--${boundary}--`);
                 
                 let startPos = 0;
                 let endPos = buffer.length;
-                let fileContent: Buffer | null = null;
+                let fileContent = null;
                 let id = '';
                 let metadata = null;
 
-                // Parse multipart data
                 while (startPos < endPos) {
                   const boundaryPos = buffer.indexOf(boundaryBuffer, startPos);
                   if (boundaryPos === -1) break;
@@ -73,7 +70,6 @@ export default defineConfig({
                   throw new Error('Missing required data');
                 }
 
-                // Save file and metadata
                 const filePath = path.join(shareDir, id);
                 fs.writeFileSync(filePath, fileContent);
                 fs.writeFileSync(`${filePath}.meta`, JSON.stringify(metadata));
@@ -89,7 +85,6 @@ export default defineConfig({
             return;
           }
 
-          // Serve files
           if (req.url.startsWith('/.share/files/')) {
             const id = req.url.split('/').pop();
             if (!id) {
@@ -109,14 +104,11 @@ export default defineConfig({
               const metadata = JSON.parse(fs.readFileSync(metaPath, 'utf-8'));
               const fileStream = fs.createReadStream(filePath);
 
-              // Set appropriate headers
               res.setHeader('Content-Type', metadata.type || 'application/octet-stream');
               res.setHeader('Content-Disposition', `attachment; filename="${metadata.originalName}"`);
               
-              // Pipe the file directly to the response
               fileStream.pipe(res);
               
-              // Clean up files after successful download
               fileStream.on('end', () => {
                 try {
                   fs.unlinkSync(filePath);
@@ -126,7 +118,6 @@ export default defineConfig({
                 }
               });
 
-              // Handle errors during streaming
               fileStream.on('error', (error) => {
                 console.error('Error streaming file:', error);
                 if (!res.headersSent) {
@@ -151,6 +142,7 @@ export default defineConfig({
     target: 'esnext',
   },
   optimizeDeps: {
+    exclude: ['fs', 'path', 'url'], // Exclude non-browser-compatible modules
     esbuildOptions: {
       target: 'esnext'
     }

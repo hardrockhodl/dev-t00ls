@@ -1,106 +1,96 @@
-import { useState, useCallback } from 'react';
-import {
-  Network,
-  Upload,
-  AlertCircle,
-  FileText,
-  Eye,
-  EyeOff,
-  Maximize2,
-  Minimize2,
-} from 'lucide-react';
-import ReactFlow, {
-  Controls,
-  Background,
-  useNodesState,
-  useEdgesState,
-  ConnectionMode,
-  Panel,
-} from 'reactflow';
+import React, { useCallback, useState } from 'react';
+import ReactFlow, { Controls, Background, useNodesState, useEdgesState, ConnectionMode, Panel, Node, Edge } from 'reactflow';
+import { TopologyToolsMenu } from '../components/topology/TopologyToolsMenu';
+import { parseTopologyCSV } from '../utils/topologyParser';
+import ELK from 'elkjs/lib/elk.bundled';
 import 'reactflow/dist/style.css';
 import { toast } from 'react-hot-toast';
-import { parseTopologyCSV } from '../utils/topologyParser.ts';
+import FloatingConnectionLine from '../components/topology/FloatingConnectionLine';
 import { NetworkNode } from '../components/topology/NetworkNode';
 
-const nodeTypes = {
-  networkNode: NetworkNode,
-};
+const nodeTypes = { networkNode: NetworkNode };
 
-const exampleCsv = `source,target,type,localPort,remotePort,localPortName,remotePortName,bandwidth,label
-Router1,Switch1,router,1,1,GigabitEthernet0/1,Ethernet1/1,1Gbps,Core Link
-Router1,Firewall1,router,2,1,GigabitEthernet0/2,WAN1,1Gbps,WAN Link
-Switch1,Server1,switch,10,1,Ethernet1/10,eth0,10Gbps,Server Connection`;
+async function layoutNodesAndEdges(nodes: Node[], edges: Edge[], layoutOption: string) {
+  const elk = new ELK();
+  const elkNodes = nodes.map((node) => ({
+    id: node.id,
+    width: 50,
+    height: 25,
+  }));
+  const elkEdges = edges.map((edge) => ({
+    id: edge.id,
+    sources: [edge.source],
+    targets: [edge.target],
+  }));
 
-export function NetworkTopology() {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [error, setError] = useState<string | null>(null);
-  const [showPorts, setShowPorts] = useState(true);
-  const [csvContent, setCsvContent] = useState<string | null>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-
-  const downloadExample = () => {
-    const blob = new Blob([exampleCsv], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'network-topology-example.csv';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+  const elkGraph = {
+    id: 'root',
+    children: elkNodes,
+    edges: elkEdges,
+    layoutOptions: {
+      'elk.algorithm': layoutOption,
+    },
   };
 
-  const updateTopology = useCallback(
-    async (content: string, showPortInfo: boolean) => {
-      try {
-        const { nodes: parsedNodes, edges: parsedEdges } =
-          await parseTopologyCSV(content, showPortInfo);
-        setNodes(parsedNodes);
-        setEdges(parsedEdges);
-        setError(null);
-        toast.success('Network topology updated');
-      } catch (err) {
-        const message =
-          err instanceof Error ? err.message : 'Failed to parse CSV file';
-        setError(message);
-        toast.error(message);
-      }
-    },
-    [setNodes, setEdges]
-  );
+  const layout = await elk.layout(elkGraph);
 
-  const handleFileUpload = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  return {
+    nodes: nodes.map((node) => ({
+      ...node,
+      position: {
+        x: layout.children?.find((n) => n.id === node.id)?.x ?? 0,
+        y: layout.children?.find((n) => n.id === node.id)?.y ?? 0,
+      },
+    })),
+    edges,
+  };
+}
 
-      if (!file.name.endsWith('.csv')) {
-        toast.error('Please upload a CSV file');
-        return;
-      }
+export default function NetworkTopology() {
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node[]>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge[]>([]);
+  const [showPorts, setShowPorts] = useState(true);
+  const [csvContent, setCsvContent] = useState<string | null>(null);
+  const [layoutOption, setLayoutOption] = useState<string>('mrtree');
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [variant, setVariant] = useState('lines');
 
+  const handleLayoutChange = useCallback((newLayout: string) => {
+    setLayoutOption(newLayout);
+    if (nodes.length > 0 && edges.length > 0) {
+      layoutNodesAndEdges(nodes, edges, newLayout).then(({ nodes, edges }) => {
+        setNodes(nodes);
+        setEdges(edges);
+      });
+    }
+  }, [nodes, edges, setNodes, setEdges]);
+
+  const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file?.name.endsWith('.csv')) {
       const reader = new FileReader();
       reader.onload = async (e) => {
         const text = e.target?.result;
-        if (typeof text !== 'string') {
-          setError('Invalid file content');
-          toast.error('Invalid file content');
-          return;
+        if (typeof text === 'string') {
+          setCsvContent(text);
+          await updateTopology(text, showPorts);
         }
-
-        setCsvContent(text);
-        await updateTopology(text, showPorts);
       };
-
-      reader.onerror = () => {
-        setError('Failed to read file');
-        toast.error('Failed to read file');
-      };
-
       reader.readAsText(file);
+    } else {
+      toast.error('Please upload a CSV file');
+    }
+  }, [showPorts]);
+
+  const updateTopology = useCallback(
+    async (content: string, showPortInfo: boolean) => {
+      const { nodes: parsedNodes, edges: parsedEdges } = await parseTopologyCSV(content, showPortInfo);
+      const { nodes: newNodes, edges: newEdges } = await layoutNodesAndEdges(parsedNodes, parsedEdges, layoutOption);
+      setNodes(newNodes);
+      setEdges(newEdges);
+      toast.success('Network topology updated');
     },
-    [showPorts, updateTopology]
+    [layoutOption]
   );
 
   const togglePortVisibility = async () => {
@@ -110,84 +100,19 @@ export function NetworkTopology() {
     }
   };
 
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
-  };
+  const toggleFullscreen = () => setIsFullscreen(!isFullscreen);
 
   return (
-    <div
-      className={`transition-all duration-300 ${
-        isFullscreen ? 'fixed inset-0 z-50 bg-white' : 'max-w-6xl mx-auto'
-      }`}
-    >
-      {!isFullscreen && (
-        <>
-          <div className="flex items-center gap-3 mb-6">
-            <Network className="w-8 h-8 text-bdazzled" />
-            <h1 className="text-3xl font-bold text-charcoal">
-              Network Topology Visualizer
-            </h1>
-          </div>
-          {/* 6666 */}
-          <div className="bg-white rounded-lg drop-shadow-md p-6 mb-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-charcoal mb-2">
-                  Upload Network Topology
-                </h2>
-                <p className="text-bdazzled mb-2">
-                  Upload a CSV file containing your network topology
-                  information.
-                </p>
-                <p className="text-sm text-gray-600">
-                  Required columns: source, target, type
-                  <br />
-                  Optional columns: localPort, remotePort, localPortName,
-                  remotePortName, bandwidth, label
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={downloadExample}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-                >
-                  <FileText className="w-5 h-5" />
-                  <span>Download Example</span>
-                </button>
-                <label className="flex items-center gap-2 px-4 py-2 bg-bdazzled text-white rounded-md hover:bg-bdazzled-light transition-colors cursor-pointer">
-                  <Upload className="w-5 h-5" />
-                  <span>Upload CSV</span>
-                  <input
-                    type="file"
-                    accept=".csv"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                  />
-                </label>
-              </div>
-            </div>
-
-            {error && (
-              <div className="mt-4 p-4 bg-red-50 border-l-4 border-red-400 flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-red-700">
-                    Error parsing CSV
-                  </h3>
-                  <p className="text-red-600">{error}</p>
-                </div>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-      {/* 666 */}
-
-      <div
-        className={`bg-white drop-shadow-md border-dotted border-2 border-gray-200 rounded-lg ${
-          isFullscreen ? 'h-screen' : 'h-[600px]'
-        }`}
-      >
+    <div className="relative h-full w-full">
+      <TopologyToolsMenu
+        onUploadCSV={handleFileUpload}
+        onLayoutChange={handleLayoutChange}
+        togglePortVisibility={togglePortVisibility}
+        toggleFullscreen={toggleFullscreen}
+        isFullscreen={isFullscreen}
+        showPorts={showPorts}
+      />
+      <div className="absolute inset-0 flex">
         <ReactFlow
           nodes={nodes}
           edges={edges}
@@ -196,58 +121,40 @@ export function NetworkTopology() {
           nodeTypes={nodeTypes}
           connectionMode={ConnectionMode.Loose}
           fitView
-          fitViewOptions={{ padding: 0.5 }}
+          fitViewOptions={{ padding: 0 }}
           defaultEdgeOptions={{
             animated: true,
             style: { stroke: '#64748b', strokeWidth: 2 },
           }}
+          connectionLineComponent={FloatingConnectionLine} // Only use here
         >
-          <Background />
-          <Controls position="top-left" />{' '}
-          {/* Flyttar kontrollpanelen till top-left */}
-          <Panel
-            position="top-right"
-            className="bg-white p-2 rounded shadow-lg space-y-2"
-          >
-            <button
-              onClick={toggleFullscreen}
-              className="flex items-center gap-2 px-3 py-1 text-sm bg-bdazzled text-white rounded hover:bg-bdazzled-light transition-colors"
-            >
-              {isFullscreen ? (
-                <>
-                  <Minimize2 className="w-4 h-4" />
-                  <span>Exit Fullscreen</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="w-4 h-4" />
-                  <span>Fullscreen</span>
-                </>
-              )}
-            </button>
-            <button
-              onClick={togglePortVisibility}
-              className="flex items-center gap-2 px-3 py-1 text-sm bg-bdazzled text-white rounded hover:bg-bdazzled-light transition-colors"
-            >
-              {showPorts ? (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  <span>Hide Port Info</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="w-4 h-4" />
-                  <span>Show Port Info</span>
-                </>
-              )}
-            </button>
-            {!isFullscreen && (
-              <div className="text-sm text-gray-600">
-                <p>Drag to move nodes</p>
-                <p>Scroll to zoom</p>
-                <p>Hover over connections to see details</p>
-              </div>
-            )}
+          <Controls position="top-left" />
+          <Background color="#c3c3c3" variant={variant} />
+          <Panel position="top-center">
+            <div className="absolute top-4 right-4 flex gap-2 bg-white p-2 rounded shadow">
+              <label htmlFor="layoutSelect" className="mr-2">Layout Algorithm:</label>
+              <select
+                id="layoutSelect"
+                value={layoutOption}
+                onChange={(e) => handleLayoutChange(e.target.value)}
+                className="bg-gray-200 p-1 rounded"
+              >
+                <option value="mrtree">Mr. Tree</option>
+                <option value="layered">Layered</option>
+                <option value="radial">Radial</option>
+              </select>
+              <label htmlFor="backgroundSelect" className="ml-4 mr-2">Background:</label>
+              <select
+                id="backgroundSelect"
+                value={variant}
+                onChange={(e) => setVariant(e.target.value)}
+                className="bg-gray-200 p-1 rounded"
+              >
+                <option value="dots">Dots</option>
+                <option value="lines">Lines</option>
+                <option value="cross">Cross</option>
+              </select>
+            </div>
           </Panel>
         </ReactFlow>
       </div>

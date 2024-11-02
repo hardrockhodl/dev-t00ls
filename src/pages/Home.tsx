@@ -7,7 +7,7 @@ export function Home() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Link
           to="/memory-parser"
-          className="block p-6 bg-yankees rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 hover:bg-charcoal-light"
+          className="block p-6 bg-yankees rounded-lg shadow-md shadow-black hover:border-black border-2 hover:shadow-inner active:bg-red-400 hover:bg-charcoal-light"
         >
           <div className="flex items-center justify-center mb-4">
             <Terminal className="w-12 h-12 text-skyblue" />
@@ -19,7 +19,20 @@ export function Home() {
             Parse and analyze Cisco device memory information
           </p>
         </Link>
-
+        <Link
+          to="/network-topology"
+          className="block p-6 bg-yankees rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 hover:bg-charcoal-light"
+        >
+          <div className="flex items-center justify-center mb-4">
+            <GitGraph className="w-12 h-12 text-skyblue" />
+          </div>
+          <h2 className="text-2xl font-semibold text-platinum mb-2">
+            Network Topology
+          </h2>
+          <p className="text-skyblue">
+            Visualize network diagrams from CSV data with interactive nodes
+          </p>
+        </Link>
         <Link
           to="/subnet-calculator"
           className="block p-6 bg-yankees rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 hover:bg-charcoal-light"
@@ -90,21 +103,6 @@ export function Home() {
           </h2>
           <p className="text-skyblue">
             Parse and visualize Cisco CLI output easily
-          </p>
-        </Link>
-
-        <Link
-          to="/network-topology"
-          className="block p-6 bg-yankees rounded-lg shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 hover:bg-charcoal-light"
-        >
-          <div className="flex items-center justify-center mb-4">
-            <GitGraph className="w-12 h-12 text-skyblue" />
-          </div>
-          <h2 className="text-2xl font-semibold text-platinum mb-2">
-            Network Topology
-          </h2>
-          <p className="text-skyblue">
-            Visualize network diagrams from CSV data with interactive nodes
           </p>
         </Link>
       </div>

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Terminal } from 'lucide-react';
 import { CLIInput } from '../components/cisco/CLIInput';
 import { CLIOutput } from '../components/cisco/CLIOutput';
+import { VLANChecker } from '../components/cisco/VLANChecker';
 import { parseCiscoCLI } from '../lib/cisco';
 import type { ParseResponse } from '../types/cisco';
 import { toast } from 'react-hot-toast';
@@ -10,6 +11,8 @@ export function CiscoCLIParser() {
   const [cliInput, setCliInput] = useState('');
   const [output, setOutput] = useState<ParseResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [enableVlanChecker, setEnableVlanChecker] = useState(false);
+  const [vlanOutput, setVlanOutput] = useState("");
 
   const handleParse = async () => {
     if (!cliInput.trim()) {
@@ -23,7 +26,6 @@ export function CiscoCLIParser() {
       setOutput(result);
       toast.success('CLI output parsed successfully');
     } catch (error) {
-      // Error is already handled by parseCiscoCLI
       setOutput(null);
     } finally {
       setLoading(false);
@@ -33,6 +35,7 @@ export function CiscoCLIParser() {
   const handleClear = () => {
     setCliInput('');
     setOutput(null);
+    setVlanOutput('');
     toast.success('Input cleared');
   };
 
@@ -53,6 +56,24 @@ export function CiscoCLIParser() {
         />
         <CLIOutput output={output} />
       </div>
+
+      <label className="flex items-center gap-2 mt-6">
+        <input
+          type="checkbox"
+          checked={enableVlanChecker}
+          onChange={() => setEnableVlanChecker(!enableVlanChecker)}
+        />
+        <span className="text-lg font-medium">Enable VLAN Checker</span>
+      </label>
+
+      {enableVlanChecker && (
+        <VLANChecker
+          showRunOutput={cliInput}
+          onResult={setVlanOutput}
+        />
+      )}
+
+      {vlanOutput && <pre className="mt-4 p-3 bg-gray-100 rounded-md">{vlanOutput}</pre>}
     </div>
   );
 }
