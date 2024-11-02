@@ -27,3 +27,4 @@ extensions.json
 deathrow/*
 _backups/*
 
+vite.config.ts
