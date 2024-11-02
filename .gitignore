@@ -26,5 +26,5 @@ dist-ssr
 extensions.json
 deathrow/*
 _backups/*
+node_modules/
 
-vite.config.ts
