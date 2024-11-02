@@ -61,12 +61,12 @@ export function DataTable({ data, columns, title }: DataTableProps) {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {sortedData.map((row, index) => (
-              <tr key={index} className={index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'}>
-                {Object.values(columns).map((column) => (
-                  <td key={column} className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {row[column]}
-                  </td>
-                ))}
+              <tr
+                key={index}
+                className={`${index % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50 hover:bg-gray-100'} ${index === sortedData.length - 1 ? 'pb-4' : ''
+                  }`} // Apply padding to the last row
+              >
+                {/* Table Cells */}
               </tr>
             ))}
           </tbody>

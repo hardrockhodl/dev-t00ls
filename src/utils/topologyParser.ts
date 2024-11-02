@@ -1,6 +1,7 @@
 import Papa from 'papaparse';
 import { Node, Edge, Position } from 'reactflow';
 import { z } from 'zod';
+import ELK from 'elkjs';
 
 const TopologyRowSchema = z.object({
   source: z.string(),
@@ -34,10 +35,7 @@ function generateNodeId(): string {
   return Math.random().toString(36).substring(2, 9);
 }
 
-function calculateNodePosition(
-  index: number,
-  total: number
-): { x: number; y: number } {
+function calculateNodePosition(index: number, total: number): { x: number; y: number } {
   const radius = Math.min(total * 50, 300);
   const angle = (index / total) * 2 * Math.PI;
   return {
@@ -58,7 +56,7 @@ function getNodeType(deviceType: string): string {
   return 'default';
 }
 
-function calculatePortOffset(portIndex: number, totalPorts: number): number {
+function calculateOffset(portIndex: number, totalPorts: number): number {
   if (totalPorts === 1) return 50;
   const spacing = 100 / (totalPorts + 1);
   return spacing * (portIndex + 1);
@@ -83,15 +81,47 @@ function formatPortInfo(row: TopologyRow, isSource: boolean): string {
   return parts.join(' - ');
 }
 
-export async function parseTopologyCSV(
-  csvContent: string,
-  showPorts: boolean = true
-): Promise<ParsedTopology> {
+async function layoutNodesAndEdges(nodes: Node[], edges: Edge[]): Promise<{ nodes: Node[]; edges: Edge[] }> {
+  const elk = new ELK();
+  const elkNodes = nodes.map((node) => ({
+    id: node.id,
+    width: 100,
+    height: 100,
+  }));
+  const elkEdges = edges.map((edge) => ({
+    id: edge.id,
+    sources: [edge.source],
+    targets: [edge.target],
+  }));
+  
+  const layout = await elk.layout({
+    id: 'root',
+    children: elkNodes,
+    edges: elkEdges,
+  });
+
+  const positionedNodes = nodes.map((node) => {
+    const elkNode = layout.children?.find((n) => n.id === node.id);
+    if (!elkNode) throw new Error(`Node with id ${node.id} not found in layout`);
+    return {
+      ...node,
+      position: {
+        x: elkNode.x ?? 0,
+        y: elkNode.y ?? 0,
+      },
+    };
+  });
+  
+  // Return within function, no top-level return
+  return { nodes: positionedNodes, edges };
+}
+
+export async function parseTopologyCSV(csvContent: string, showPorts: boolean = true): Promise<ParsedTopology> {
   return new Promise((resolve, reject) => {
     Papa.parse(csvContent, {
       header: true,
       skipEmptyLines: true,
-      complete: (results) => {
+      complete: async (results: Papa.ParseResult<Record<string, string>>) => {
         try {
           const rows = results.data as Record<string, string>[];
 
@@ -105,9 +135,7 @@ export async function parseTopologyCSV(
           );
 
           if (missingColumns.length) {
-            throw new Error(
-              `Missing required columns: ${missingColumns.join(', ')}`
-            );
+            throw new Error(`Missing required columns: ${missingColumns.join(', ')}`);
           }
 
           const validRows = rows.map((row) => {
@@ -158,7 +186,7 @@ export async function parseTopologyCSV(
                   id: `${deviceId}-${portId}`,
                   name: portInfo.name,
                   position: Position.Bottom,
-                  offset: calculatePortOffset(
+                  offset: calculateOffset(
                     portIndex,
                     Object.keys(ports).length
                   ),
@@ -219,12 +247,12 @@ export async function parseTopologyCSV(
             };
           });
 
-          resolve({ nodes, edges });
+          resolve(await layoutNodesAndEdges(nodes, edges));
         } catch (error) {
           reject(error);
         }
       },
-      error: (error: { message: any; }) => {
+      error: (error: any) => {
         reject(new Error(`Failed to parse CSV: ${error.message}`));
       },
     });
