@@ -8,7 +8,7 @@ export default {
         platinum: '#E7E8E7',
         skyblue: '#8FBFDA',
         bdazzled: '#2C6485',
-        'bdazzled-light': '#3d7ea3',
+        bdazzledlight: '#3d7ea3',
         charcoal: '#394A56',
         thundra: '#f8fafc'
       },

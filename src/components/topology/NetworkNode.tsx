@@ -1,25 +1,33 @@
 import { memo } from 'react';
 import { Handle, Position } from 'reactflow';
 import {
-  MdOutlineRouter,
-  MdDeviceHub,
-  MdOutlineMarkunreadMailbox,
   MdLaptopMac,
-  MdOutlineShield,
-  MdQuestionMark,
-  MdDesktopWindows,
-  MdLanguage,
+  MdWifi,
 } from 'react-icons/md'; // Material Icons (for routers)
+import { GrGateway } from "react-icons/gr";
+import { GiBrickWall } from 'react-icons/gi';
+import { SiApple, SiCisco, SiVmware, SiWindows11 } from 'react-icons/si';
+import { FaServer } from 'react-icons/fa';
+import { BsQuestionSquare, BsWebcam } from 'react-icons/bs';
+import { FcLinux, FcPrint } from 'react-icons/fc';
+import { Cloud } from 'lucide-react';
 
 const deviceIcons = {
-  router: MdOutlineRouter,
-  switch: MdDeviceHub,
-  firewall: MdOutlineShield,
-  server: MdOutlineMarkunreadMailbox,
-  clientmac: MdLaptopMac,
-  clientwin: MdDesktopWindows,
-  cloud: MdLanguage,
-  default: MdQuestionMark,
+  router: GrGateway,
+  switch: SiCisco,
+  firewall: GiBrickWall,
+  palo: GrGateway,
+  server: FaServer,
+  client: MdLaptopMac,
+  clientmac: SiApple,
+  clientwin: SiWindows11,
+  cloud: Cloud,
+  default: BsQuestionSquare,
+  security: BsWebcam,
+  printer: FcPrint,
+  accesspoint: MdWifi,
+  vmware: SiVmware,
+  linux: FcLinux,
 };
 
 interface Port {
