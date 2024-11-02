@@ -26,4 +26,4 @@ dist-ssr
 extensions.json
 deathrow/*
 _backups/*
-node_modules
+node_modules/
