@@ -17,7 +17,7 @@ export function MemoryParser() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-6xl mx-auto bg-hero-pattern">
       <h1 className="text-3xl font-bold text-charcoal mb-6">Cisco Memory Parser</h1>
       
       <div className="mb-8">

@@ -26,6 +26,7 @@ dist-ssr
 extensions.json
 deathrow/*
 _backups/*
+public/.share/*
 node_modules/
 
 # react - https://github.com/hardrockhodl/dev-t00ls/edit/main/.gitignore#L14C0

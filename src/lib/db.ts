@@ -10,7 +10,16 @@ export interface Port {
 
 export async function searchPorts(query: string): Promise<Port[]> {
   try {
-    const { data, error } = await supabase
+    // First, get exact matches on port_number
+    const { data: exactMatches, error: exactError } = await supabase
+      .from('mytable')
+      .select('*')
+      .eq('port_number', query); // Exact match on port_number
+
+    if (exactError) throw exactError;
+
+    // Then, get other partial matches
+    const { data: partialMatches, error: partialError } = await supabase
       .from('mytable')
       .select('*')
       .or(
@@ -18,12 +27,19 @@ export async function searchPorts(query: string): Promise<Port[]> {
         `protocol.ilike.%${query}%,` +
         `service_name.ilike.%${query}%,` +
         `description.ilike.%${query}%`
-      )
-      .order('port_number')
-      .limit(100);
+      );
 
-    if (error) throw error;
-    return data || [];
+    if (partialError) throw partialError;
+
+    // Filter out any duplicates if `query` was part of other fields like `protocol`
+    const uniquePartialMatches = partialMatches?.filter(
+      (item) => item.port_number !== query
+    );
+
+    // Combine exact matches with the remaining partial matches
+    return [...(exactMatches || []), ...(uniquePartialMatches || [])].sort(
+      (a, b) => parseInt(a.port_number, 10) - parseInt(b.port_number, 10)
+    );
   } catch (error) {
     console.error('Error searching ports:', error);
     return [];
@@ -36,7 +52,7 @@ export async function getAllPorts(): Promise<Port[]> {
       .from('mytable')
       .select('*')
       .order('port_number')
-      .limit(100);
+      .limit(20);
 
     if (error) throw error;
     return data || [];

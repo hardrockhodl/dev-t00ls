@@ -36,8 +36,18 @@ export async function parseCiscoCLI(input: string): Promise<ParseResponse> {
 
     const data = await response.json();
     
+  // Define an interface for the expected structure
+    interface NetworkInterface {
+      interface?: string;
+      status?: string;
+      protocol?: string;
+      ip_address?: string;
+      description?: string;
+      mtu?: number;
+    }
+
     // Handle the specific response format from the AWS Lambda
-    const interfaces = data.interfaces?.map((intf: any) => ({
+    const interfaces = data.interfaces?.map((intf: NetworkInterface) => ({
       name: intf.interface || 'Unknown',
       status: intf.status || 'Unknown',
       protocol: intf.protocol || 'Unknown',

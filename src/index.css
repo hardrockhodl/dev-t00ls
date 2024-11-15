@@ -11,7 +11,7 @@
     bottom: 100%;
     margin-bottom: 0.5rem; /* Tailwind equivalent of mb-2 */
   }
-  .handle-with-label.bottom::aft´er {
+  .handle-with-label.bottom::after {
     bottom: auto;
     top: 100%;
     margin-bottom: 0;
