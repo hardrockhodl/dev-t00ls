@@ -202,10 +202,10 @@ export default function NetworkTopology() {
     <div className="relative h-screen w-full bg-gray-100">
       <button
         onClick={() => setIsMenuVisible(!isMenuVisible)}
-        className="absolute top-4 left-4 z-20 flex items-center gap-2 px-4 py-2 bg-bdazzled text-white rounded-md hover:bg-bdazzled-light transition-colors"
+        className="absolute top-4 left-4 z-20 flex items-center gap-2 px-4 py-2 bg-graymas text-white rounded-md hover:bg-asfalt active:bg-graymas transition-colors"
       >
-        <Menu className="w-4 h-4" />
-        <span>{isMenuVisible ? 'Hide Menu' : 'Show Menu'}</span>
+        <Menu className="w-6 h-6" />
+        {/* <span>{isMenuVisible ? '' : ''}</span>   */}
       </button>
 
       {isMenuVisible && (
@@ -307,8 +307,8 @@ export default function NetworkTopology() {
         className="bg-gray-50"
       >
         <Background color="#94a3b8" variant={variant} />
-        <Controls className="bg-white rounded-lg shadow-lg border border-gray-200" />
-        <Panel position="bottom-center" className="bg-white p-2 rounded-t-lg shadow-lg">
+        <Controls className="bg-lava rounded-lg shadow-lg border border-gray-200"/>
+        <Panel position="top-center" className="bg-white p-2 rounded-t-lg shadow-lg">
           <div className="text-sm text-gray-600">
             {nodes.length} nodes • {edges.length} connections
           </div>

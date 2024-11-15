@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Network, Search, Loader2 } from 'lucide-react';
 import { getAllPorts, searchPorts, initializeDatabase, type Port } from '../lib/db';
 
-export function PortLookup() {
+export const PortLookup: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [ports, setPorts] = useState<Port[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const searchTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const setupDatabase = async () => {
@@ -16,29 +17,30 @@ export function PortLookup() {
         console.error('Error initializing database:', err);
       }
     };
-
     setupDatabase();
   }, []);
 
-  useEffect(() => {
-    const loadPorts = async () => {
-      try {
-        setLoading(true);
-        const data = await getAllPorts();
-        setPorts(data);
-      } catch (err) {
-        setError('Failed to load ports. Please try again later.');
-        console.error('Error loading ports:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadPorts();
+  const loadPorts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await getAllPorts();
+      setPorts(data);
+    } catch (err) {
+      setError('Failed to load ports. Please try again later.');
+      console.error('Error loading ports:', err);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => {
-    const searchTimer = setTimeout(async () => {
+    loadPorts();
+  }, [loadPorts]);
+
+  useEffect(() => {
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+
+    searchTimer.current = setTimeout(async () => {
       if (searchTerm) {
         try {
           setLoading(true);
@@ -51,13 +53,14 @@ export function PortLookup() {
           setLoading(false);
         }
       } else {
-        const allPorts = await getAllPorts();
-        setPorts(allPorts);
+        loadPorts();
       }
     }, 300);
 
-    return () => clearTimeout(searchTimer);
-  }, [searchTerm]);
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, [searchTerm, loadPorts]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -96,7 +99,7 @@ export function PortLookup() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-platinum uppercase tracking-wider">Description</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-thundra divide-y divide-gray-400">
               {loading ? (
                 <tr>
                   <td colSpan={4} className="px-6 py-4 text-center">
@@ -114,7 +117,7 @@ export function PortLookup() {
                 </tr>
               ) : (
                 ports.map((port) => (
-                  <tr key={port.unik_key} className="hover:bg-gray-50">
+                  <tr key={port.unik_key} className="hover:bg-thundra even:bg-gray-100 ">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-charcoal">
                       {port.port_number}
                     </td>
@@ -133,7 +136,7 @@ export function PortLookup() {
             </tbody>
           </table>
         </div>
-      </div>
+      </div> 
     </div>
   );
 }

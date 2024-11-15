@@ -8,13 +8,17 @@ import { FileSharing } from './pages/FileSharing';
 import { FileSharing2 } from './pages/FileSharing2';
 import { CiscoCLIParser } from './pages/CiscoCLIParser';
 import NetworkTopology from './pages/NetworkTopology';
+// import Terminal from './pages/Terminal';
+import CiscoCLIExplorer from './pages/CiscoCLIExplorer';
+import TextDiffTool from './pages/TextDiffTool';
+
 
 export function App() {
   return (
     <BrowserRouter>
-      <div className="min-h-screen bg-gray-200">
+      <div className="min-h-screen bg-gray-300">
         <Navigation />
-        <main className="w-full h-screen px-4 py-2">
+        <main className="w-full h-fit px-4 py-4">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/network-topology" element={<NetworkTopology />} />
@@ -23,7 +27,10 @@ export function App() {
             <Route path="/port-lookup" element={<PortLookup />} />
             <Route path="/file-sharing" element={<FileSharing />} />
             <Route path="/file-sharing-2" element={<FileSharing2 />} />
-            <Route path="/cisco-cli-parser" element={<CiscoCLIParser />} />          
+            <Route path="/cisco-cli-parser" element={<CiscoCLIParser />} />
+            {/* <Route path="/terminal" element={<Terminal />} /> */}
+            <Route path="/cli-explorer" element={<CiscoCLIExplorer />} />
+            <Route path="/text-diff" element={<TextDiffTool />} />
           </Routes>
         </main>
       </div>
