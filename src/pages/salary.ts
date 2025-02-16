@@ -15,7 +15,7 @@ interface TaxRate {
 }
 
 function App() {
-  const [baseSalary, setBaseSalary] = useState(52530);
+  const [baseSalary, setBaseSalary] = useState(50000);
   const [income, setIncome] = useState({
     onCallDays: 0,
     onCallRate: 1000,
