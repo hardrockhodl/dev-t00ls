@@ -11,6 +11,7 @@ import NetworkTopology from './pages/NetworkTopology';
 // import Terminal from './pages/Terminal';
 import CiscoCLIExplorer from './pages/CiscoCLIExplorer';
 import TextDiffTool from './pages/TextDiffTool';
+import SalaryCalculator from './pages/salary';
 
 
 export function App() {
@@ -31,6 +32,7 @@ export function App() {
             {/* <Route path="/terminal" element={<Terminal />} /> */}
             <Route path="/cli-explorer" element={<CiscoCLIExplorer />} />
             <Route path="/text-diff" element={<TextDiffTool />} />
+            <Route path="/salary" element={<SalaryCalculator />} />
           </Routes>
         </main>
       </div>
