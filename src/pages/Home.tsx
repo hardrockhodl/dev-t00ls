@@ -21,6 +21,19 @@ export function Home() {
             </p>
           </Link>
           <Link
+            to="/salary"
+            className="block p-6 bg-yankees rounded-lg shadow-md shadow-black hover:border-gray-800 hover:border-4 hover:shadow-inner active:bg-yankeesgray hover:bg-yankeeslight">
+            <div className="flex items-center justify-center mb-4">
+              <Terminal className="w-12 h-12 text-skyblue" />
+            </div>
+            <h2 className="text-2xl font-semibold text-platinum mb-2">
+              Salary Calculator
+            </h2>
+            <p className="text-skyblue">
+              Calculate your gross and net income. See taxes and pension.
+            </p>
+          </Link>
+          <Link
             to="/network-topology"
             className="block p-6 bg-yankees rounded-lg shadow-md shadow-black hover:border-black border-2 hover:shadow-inner active:bg-yankeesgray hover:bg-yankeeslight">
             <div className="flex items-center justify-center mb-4">
