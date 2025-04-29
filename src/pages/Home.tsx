@@ -4,7 +4,7 @@ import { DiCisco } from 'react-icons/di';
 
 export function Home() {
   return (
-    <div className="bg-hero-pattern bg-cover overflow-visible bg-center bg-repeat-y">
+    <div className="bg-ghost">
       <div className="max-w-4xl mx-auto py-10 ">
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           <Link
