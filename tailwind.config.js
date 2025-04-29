@@ -4,7 +4,7 @@ export default {
   theme: {
     extend: {
       backgroundImage: {
-        'hero-pattern': "url('/img/swirl-sq-light.svg')",
+        'hero-pattern': "url('<a href="https://imgbb.com/"><img src="https://i.ibb.co/SXPYXMH4/circuit-board.png" alt="circuit-board" border="0"></a>')",
       },
       backgroundPosition: 'center',
       backgroundSize: {
