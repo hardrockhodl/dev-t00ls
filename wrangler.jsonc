@@ -1,5 +1,5 @@
 {
-  "name": "my-worker",
+  "name": "dev-t00ls",
   "compatibility_date": "2025-08-20",
-  "main": "src/index.ts"
+  "assets": { "directory": "dist" }
 }
