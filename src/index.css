@@ -4,7 +4,7 @@
 
 @layer utilities {
   .handle-with-label::after {
-    content: attr(data-label);
+    content: attr(data-label string);
     position: absolute;
     font-size: 0.625rem; /* Tailwind for text-xs */
     white-space: nowrap;
